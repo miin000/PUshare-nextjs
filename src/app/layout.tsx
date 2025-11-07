@@ -6,7 +6,7 @@ import { Toaster } from 'react-hot-toast';
 
 const inter = Inter({ subsets: ['latin'] });
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'Phenikaa Docs',
   description: 'Nền tảng chia sẻ tài liệu',
 };
@@ -17,10 +17,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${inter.className} bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-200`}
-      >
+    <html lang="en">
+      <body className={`${inter.className} bg-white text-gray-900`}>
         <Providers>{children}</Providers>
         <Toaster position="top-right" />
       </body>

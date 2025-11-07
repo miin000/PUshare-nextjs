@@ -1,7 +1,6 @@
 'use client';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth.store';
-import { ThemeSwitcher } from './ThemeSwitcher'; // <-- IMPORT
 
 export default function Navbar() {
   const { isAuthenticated, user, logout } = useAuthStore();
@@ -46,10 +45,6 @@ export default function Navbar() {
               Upload
             </Link>
 
-            {/* --- THÊM NÚT SÁNG/TỐI --- */}
-            <ThemeSwitcher />
-            {/* --- KẾT THÚC --- */}
-
             <button
               onClick={logout}
               className="font-semibold text-gray-700 hover:text-blue-500 dark:text-gray-200"
@@ -64,7 +59,6 @@ export default function Navbar() {
           </>
         ) : (
           <>
-            <ThemeSwitcher />
             <Link
               href="/login"
               className="px-4 py-2 font-semibold text-white bg-blue-500 rounded-full hover:bg-blue-600"

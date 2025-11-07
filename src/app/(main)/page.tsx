@@ -1,40 +1,42 @@
+// src/app/(main)/page.tsx (Frontend)
+
 'use client';
 import { useState } from 'react';
 import { useDocuments } from '@/hooks/useDocuments';
 import DocumentCard from '@/components/documents/DocumentCard';
-import {
-  Squares2X2Icon,
-  QueueListIcon,
-  ChevronUpIcon,
-  ChevronDownIcon,
-} from '@heroicons/react/24/solid';
+import { Squares2X2Icon, QueueListIcon } from '@heroicons/react/24/solid';
+// --- THÊM IMPORT MỚI ---
+import SortDropdown, {
+  SortOption,
+} from '@/components/common/SortDropdown';
+// --- KẾT THÚC ---
 
 type ViewMode = 'grid' | 'list';
-type SortBy = 'uploadDate' | 'downloads';
-type SortOrder = 'asc' | 'desc';
+
+// Định nghĩa các lựa chọn cho dropdown
+const sortByOptions: SortOption[] = [
+  { label: 'Ngày đăng (Mới nhất)', value: 'uploadDate' },
+  { label: 'Lượt tải (Nhiều nhất)', value: 'downloads' },
+];
+
+const sortOrderOptions: SortOption[] = [
+  { label: 'Giảm dần (Desc)', value: 'desc' },
+  { label: 'Tăng dần (Asc)', value: 'asc' },
+];
 
 export default function HomePage() {
   // State cho chế độ xem (Grid/List)
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
 
-  // State cho sắp xếp
-  const [sortBy, setSortBy] = useState<SortBy>('uploadDate');
-  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
+  // State cho sắp xếp (Sử dụng object đầy đủ)
+  const [sortBy, setSortBy] = useState<SortOption>(sortByOptions[0]);
+  const [sortOrder, setSortOrder] = useState<SortOption>(sortOrderOptions[0]);
 
-  // Gọi hook với state
-  const { data, isLoading, isError } = useDocuments(sortBy, sortOrder);
-
-  // Hàm xử lý thay đổi sắp xếp
-  const handleSortChange = (newSortBy: SortBy) => {
-    if (newSortBy === sortBy) {
-      // Nếu click vào cái đang active, đổi chiều
-      setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc');
-    } else {
-      // Nếu click vào cái mới, set và mặc định là 'desc'
-      setSortBy(newSortBy);
-      setSortOrder('desc');
-    }
-  };
+  // Gọi hook với giá trị .value
+  const { data, isLoading, isError } = useDocuments(
+    sortBy.value,
+    sortOrder.value
+  );
 
   if (isLoading) {
     return (
@@ -48,27 +50,26 @@ export default function HomePage() {
   return (
     <div>
       {/* === THANH HEADER MỚI === */}
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">
           All Documents ({data?.pagination.total || 0})
         </h1>
 
-        <div className="flex items-center gap-4">
-          {/* Nút Sắp xếp */}
-          <div className="flex gap-2">
-            <SortButton
-              label="Upload Date"
-              isActive={sortBy === 'uploadDate'}
-              sortOrder={sortOrder}
-              onClick={() => handleSortChange('uploadDate')}
-            />
-            <SortButton
-              label="Downloads"
-              isActive={sortBy === 'downloads'}
-              sortOrder={sortOrder}
-              onClick={() => handleSortChange('downloads')}
-            />
-          </div>
+        <div className="flex flex-wrap items-center gap-4">
+          {/* --- THAY THẾ NÚT BẰNG DROPDOWN --- */}
+          <SortDropdown
+            label="Sắp xếp theo"
+            options={sortByOptions}
+            value={sortBy}
+            onChange={setSortBy}
+          />
+          <SortDropdown
+            label="Thứ tự"
+            options={sortOrderOptions}
+            value={sortOrder}
+            onChange={setSortOrder}
+          />
+          {/* --- KẾT THÚC THAY THẾ --- */}
 
           {/* Nút Chuyển View (Grid/List) */}
           <div className="flex p-1 bg-gray-200 rounded-lg dark:bg-gray-700">
@@ -98,7 +99,7 @@ export default function HomePage() {
         className={
           viewMode === 'grid'
             ? 'grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'
-            : 'flex flex-col gap-4' // Container cho List View
+            : 'flex flex-col gap-4'
         }
       >
         {data?.data.map((doc) => (
@@ -108,23 +109,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-// Component nút Sắp xếp
-const SortButton = ({ label, isActive, sortOrder, onClick }: any) => (
-  <button
-    onClick={onClick}
-    className={`flex items-center gap-1 px-4 py-2 text-sm font-semibold rounded-lg ${
-      isActive
-        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200'
-        : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
-    }`}
-  >
-    {label}
-    {isActive &&
-      (sortOrder === 'desc' ? (
-        <ChevronDownIcon className="w-4 h-4" />
-      ) : (
-        <ChevronUpIcon className="w-4 h-4" />
-      ))}
-  </button>
-);

@@ -21,16 +21,14 @@ export default function MainLayout({
             isOpen={isSidebarOpen}
             onClose={() => setIsSidebarOpen(false)}
           />
-          <main
-            className="flex-1 p-6 relative bg-gray-50 dark:bg-gray-950 transition-all duration-300"
-          >
+          <main className="flex-1 p-6 relative bg-gray-50 transition-all duration-300">
             {/* Nút mở sidebar khi nó đóng */}
             {!isSidebarOpen && (
               <button
                 onClick={() => setIsSidebarOpen(true)}
-                className="absolute top-4 left-4 p-2 bg-white rounded-full shadow-md hover:bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600"
+                className="absolute top-4 left-4 p-2 bg-white rounded-full shadow-md hover:bg-gray-100"
               >
-                <AdjustmentsHorizontalIcon className="w-6 h-6 text-gray-800 dark:text-gray-100" />
+                <AdjustmentsHorizontalIcon className="w-6 h-6 text-gray-800" />
               </button>
             )}
             {children}

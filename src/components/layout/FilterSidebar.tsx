@@ -18,9 +18,14 @@ interface FilterSidebarProps {
 export default function FilterSidebar({ isOpen, onClose }: FilterSidebarProps) {
   return (
     <aside
-      className={`relative flex-shrink-0 bg-white dark:bg-gray-900 border-r dark:border-gray-700 transition-all duration-300 ${
-        isOpen ? 'w-64 p-4' : 'w-0 p-0 overflow-hidden'
-      }`}
+      className={`relative flex-shrink-0 
+        // --- SỬA CÁC CLASS SAU ---
+        bg-white dark:bg-gray-900 
+        border-r dark:border-gray-700
+        // --- KẾT THÚC ---
+        transition-all duration-300 ${
+          isOpen ? 'w-64 p-4' : 'w-0 p-0 overflow-hidden'
+        }`}
     >
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
