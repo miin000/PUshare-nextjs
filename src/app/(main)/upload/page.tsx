@@ -1,0 +1,64 @@
+// src/app/(main)/upload/page.tsx
+'use client';
+
+import { useState } from 'react';
+import { UploadDocumentDto } from '@/@types/document.type';
+import FileUploadStep from '@/components/upload/FileUploadStep';
+import FileDetailsStep from '@/components/upload/FileDetailsStep';
+import UploadDoneStep from '@/components/upload/UploadDoneStep';
+
+export default function UploadPage() {
+  const [step, setStep] = useState(1); // Step 1: Upload
+  const [files, setFiles] = useState<File[]>([]);
+  const [metadata, setMetadata] = useState<Partial<UploadDocumentDto>[]>([]);
+
+    // Hàm này được gọi bởi FileUploadStep
+  const handleFilesAccepted = (acceptedFiles: File[]) => {
+    setFiles(acceptedFiles);
+    // Tạo một mảng metadata rỗng tương ứng
+    setMetadata(Array(acceptedFiles.length).fill({}));
+    // Tự động chuyển sang bước 2
+    setStep(2);
+  };
+
+  const handleDetailsSubmit = () => {
+    // TODO: Validate metadata (kiểm tra title có rỗng không, v.v.)
+    setStep(3); // Chuyển sang Bước 3 (Done)
+  };
+
+  const renderStep = () => {
+    switch (step) {
+      case 1:
+        return <FileUploadStep onFilesAccepted={handleFilesAccepted} />;
+      case 2:
+        return (
+          <FileDetailsStep
+            files={files}
+            metadata={metadata}
+            setMetadata={setMetadata}
+            onSubmit={handleDetailsSubmit}
+          />
+        );
+      case 3:
+        return <UploadDoneStep files={files} metadata={metadata} />;
+      default:
+        return <FileUploadStep onFilesAccepted={handleFilesAccepted} />;
+    }
+  };
+
+  return (
+    <div className="p-8 mx-auto max-w-4xl bg-white rounded-lg shadow-lg">
+      <h1 className="text-3xl font-bold text-center text-[#2F80ED]">
+        Upload your files
+      </h1>
+
+      <div className="flex justify-between my-8 text-gray-500">
+        <span className={step === 1 ? 'text-[#2F80ED] font-bold' : ''}>1. Upload</span>
+        <span className={step === 2 ? 'text-[#2F80ED] font-bold' : ''}>2. Details</span>
+        <span className={step === 3 ? 'text-[#2F80ED] font-bold' : ''}>3. Done</span>
+      </div>
+
+      <div>{renderStep()}</div>
+    </div>
+  );
+}
