@@ -12,7 +12,7 @@ export default function MyDocumentListItem({ doc }: MyDocumentListItemProps) {
       <div>
         <h3 className="text-lg font-semibold text-blue-700">{doc.title}</h3>
         <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
-          <span>{doc.subject || 'Uncategorized'}</span>
+          <span>{doc.subject?.name || 'Uncategorized'}</span>
           <span>•</span>
           <span>{new Date(doc.uploadDate).toLocaleDateString()}</span>
           <span>•</span>

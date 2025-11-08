@@ -5,6 +5,17 @@ export interface Uploader {
   avatarUrl?: string;
 }
 
+// --- Kiểu dữ liệu (Types) ---
+
+// Kiểu dữ liệu cho Môn học (Subject)
+// Đây là đối tượng được "populate" (tra cứu) từ backend
+export interface Subject {
+  _id: string;
+  name: string;
+  code: string;
+}
+
+// --- GIAO DIỆN DOCUMENT CHÍNH (ĐÃ CẬP NHẬT) ---
 export interface Document {
   _id: string;
   title: string;
@@ -12,10 +23,14 @@ export interface Document {
   fileUrl: string;
   fileType: string;
   fileSize: number;
-  uploader: Uploader;
+  uploader: Uploader; // <-- Là một Object
   status: 'PROCESSING' | 'VISIBLE' | 'BLOCKED';
-  faculty: string;
-  subject: string;
+
+  // --- THAY ĐỔI QUAN TRỌNG ---
+  // faculty: string; // <-- Trường này đã bị BỎ
+  subject: Subject; // <-- Đổi từ string sang Object
+  // --- KẾT THÚC ---
+
   documentType: string;
   schoolYear: string;
   downloadCount: number;
@@ -23,11 +38,11 @@ export interface Document {
   uploadDate: string; // (Date sẽ được trả về dưới dạng string)
 }
 
+// DTO này được dùng cho trang Upload
 export interface UploadDocumentDto {
   title: string;
   description: string;
-  faculty: string;
-  subject: string;
+  subject: string; // Đây là ID (string) khi gửi đi
   documentType: string;
   schoolYear: string;
 }

@@ -8,10 +8,11 @@ interface AuthState {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
-  _hasHydrated: boolean; // <-- THÊM MỚI: State theo dõi hydration
+  _hasHydrated: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
-  setHasHydrated: (hasHydrated: boolean) => void; // <-- THÊM MỚI
+  setHasHydrated: (hasHydrated: boolean) => void;
+  setUser: (user: User) => void; // ✅ thêm dòng này
 }
 
 export const useAuthStore = create(
@@ -20,23 +21,20 @@ export const useAuthStore = create(
       user: null,
       token: null,
       isAuthenticated: false,
-      _hasHydrated: false, // <-- Giá trị ban đầu
+      _hasHydrated: false,
 
-      setHasHydrated: (hasHydrated) => {
-        set({ _hasHydrated: hasHydrated });
-      },
+      setHasHydrated: (hasHydrated) => set({ _hasHydrated: hasHydrated }),
+
+      // ✅ thêm setUser
+      setUser: (user) => set({ user }),
 
       login: async (email, password) => {
         try {
-          const response = await api.post('/auth/login', {
-            email,
-            password,
-          });
+          const response = await api.post('/auth/login', { email, password });
           const { user, accessToken } = response.data;
           set({ user, token: accessToken, isAuthenticated: true });
           toast.success('Đăng nhập thành công!');
         } catch (error: any) {
-          console.error('Login failed:', error);
           toast.error(error.response?.data?.message || 'Email hoặc mật khẩu không đúng');
         }
       },
@@ -48,11 +46,8 @@ export const useAuthStore = create(
     }),
     {
       name: 'auth-storage',
-      // THÊM MỚI: Callback này sẽ chạy SAU KHI khôi phục xong
       onRehydrateStorage: () => (state) => {
-        if (state) {
-          state.setHasHydrated(true);
-        }
+        if (state) state.setHasHydrated(true);
       },
     }
   )

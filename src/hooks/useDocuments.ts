@@ -1,35 +1,38 @@
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { Document } from '@/@types/document.type';
+import qs from 'qs';
 
-// Định nghĩa kiểu dữ liệu trả về từ API (có phân trang)
 interface DocumentsResponse {
   data: Document[];
-  pagination: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  };
+  pagination: { total: number; page: number; limit: number; totalPages: number; };
 }
 
-// Cập nhật hook
-export const useDocuments = (sortBy: string, sortOrder: string) => {
-  // Hàm fetcher
+export const useDocuments = (sortBy: string, sortOrder: string, subjectIds: string[]) => {
+  // ✅ key ổn định tuyệt đối
+  const keySubjects = useMemo(() => [...subjectIds].sort().join(','), [subjectIds]);
+
   const getDocuments = async (): Promise<DocumentsResponse> => {
+    const cleanSubjects = subjectIds.filter((id) => !!id); // ✅ lọc trước
+    console.log('🚀 [API CALL] /documents params:', {
+      sortBy, sortOrder, subjects: cleanSubjects
+    });
     const response = await api.get('/documents', {
-      params: {
-        sortBy: sortBy, // 'uploadDate' or 'downloads'
-        sortOrder: sortOrder, // 'asc' or 'desc'
-        // (Thêm các params filter khác ở đây sau)
-      },
+      params: { sortBy, sortOrder, subjects: subjectIds },
+      paramsSerializer: (params) =>
+        qs.stringify(params, { arrayFormat: 'brackets' }), // ✅ dùng brackets thay vì repeat
     });
     return response.data;
   };
 
   return useQuery({
-    // queryKey PHẢI bao gồm các tham số
-    queryKey: ['documents', sortBy, sortOrder],
+    queryKey: ['documents', sortBy, sortOrder, keySubjects],
     queryFn: getDocuments,
+    // 🛡️ hạn chế refetch “vô tình”
+    refetchOnWindowFocus: false,
+    retry: 1,
+    staleTime: 15_000,
+    gcTime: 5 * 60_000,
   });
 };

@@ -13,3 +13,13 @@ export interface User {
   uploadsCount: number;
   downloadsCount: number;
 }
+
+export interface UpdateProfileDto {
+  fullName?: string;
+  avatarUrl?: string;
+}
+
+export interface ChangePasswordDto {
+  oldPassword: string;
+  newPassword: string;
+}

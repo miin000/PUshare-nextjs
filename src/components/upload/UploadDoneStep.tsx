@@ -1,9 +1,12 @@
 'use client';
-import { useEffect, useRef } from 'react'; // <-- Import useRef
+import { useEffect, useRef } from 'react'; // <--- Cập nhật: Thêm useRef
 import { useUploadDocument } from '@/hooks/useUploadDocument';
 import { UploadDocumentDto } from '@/@types/document.type';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+// --- THÊM IMPORT NÀY ---
+import { useQueryClient } from '@tanstack/react-query';
+// --- KẾT THÚC ---
 
 interface UploadDoneStepProps {
   files: File[];
@@ -13,20 +16,20 @@ interface UploadDoneStepProps {
 export default function UploadDoneStep({ files, metadata }: UploadDoneStepProps) {
   const router = useRouter();
   const mutation = useUploadDocument();
-  
-  // THÊM MỚI: Dùng ref để đảm bảo chỉ chạy 1 lần
-  const uploadStartedRef = useRef(false);
+  // --- THÊM 2 DÒNG NÀY ---
+  const queryClient = useQueryClient();
+  const hasUploaded = useRef(false); // Thêm khóa (lock)
+  // --- KẾT THÚC ---
 
   useEffect(() => {
-    // Nếu đã chạy rồi, không làm gì cả
-    if (uploadStartedRef.current) {
-      return;
-    }
-    // Đánh dấu là đã bắt đầu chạy
-    uploadStartedRef.current = true;
-
+    // Hàm này tự động chạy khi component được render
     const startUploads = async () => {
-      toast.loading(`Đang tải lên ${files.length} tệp...`, { id: 'upload' });
+      // --- THÊM KIỂM TRA ---
+      if (hasUploaded.current) return; // Nếu đã upload rồi, không chạy lại
+      hasUploaded.current = true; // Đánh dấu là đã bắt đầu upload
+      // --- KẾT THÚC ---
+
+      const uploadToastId = toast.loading(`Đang tải lên ${files.length} tệp...`);
 
       const uploadPromises = files.map((file, index) => {
         return mutation.mutateAsync({
@@ -37,25 +40,23 @@ export default function UploadDoneStep({ files, metadata }: UploadDoneStepProps)
 
       try {
         await Promise.all(uploadPromises);
-        toast.success('Tất cả các tệp đã được tải lên!', { id: 'upload' });
+        toast.success('Tất cả các tệp đã được tải lên!', { id: uploadToastId });
+
+        // --- THÊM DÒNG NÀY ĐỂ XÓA CACHE ---
+        queryClient.invalidateQueries({ queryKey: ['documents'] });
+        // --- KẾT THÚC ---
 
         setTimeout(() => {
-          // Invalidate query để trang chủ load lại
-          // (Chúng ta sẽ thêm cái này sau, giờ cứ redirect)
           router.push('/');
         }, 2000);
       } catch (error) {
-        toast.error('Có lỗi xảy ra khi tải lên tệp.', { id: 'upload' });
-        // Nếu lỗi, reset lại để user có thể thử lại
-        uploadStartedRef.current = false;
+        toast.error('Có lỗi xảy ra khi tải lên tệp.', { id: uploadToastId });
+        hasUploaded.current = false; // Mở khóa nếu thất bại
       }
     };
 
     startUploads();
-    
-    // Xóa dependencies [files, metadata, mutation, router]
-    // Bằng cách này, useEffect chỉ chạy MỘT LẦN khi component mount
-  }, []); // <-- Mảng dependency rỗng
+  }, [files, metadata, mutation, router, queryClient]); // Thêm queryClient vào dependencies
 
   return (
     <div className="text-center">

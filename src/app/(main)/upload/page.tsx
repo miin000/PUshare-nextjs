@@ -1,4 +1,3 @@
-// src/app/(main)/upload/page.tsx
 'use client';
 
 import { useState } from 'react';
@@ -6,25 +5,35 @@ import { UploadDocumentDto } from '@/@types/document.type';
 import FileUploadStep from '@/components/upload/FileUploadStep';
 import FileDetailsStep from '@/components/upload/FileDetailsStep';
 import UploadDoneStep from '@/components/upload/UploadDoneStep';
+// --- IMPORT MỚI ---
+import { toast } from 'react-hot-toast';
+// --- KẾT THÚC ---
 
 export default function UploadPage() {
   const [step, setStep] = useState(1); // Step 1: Upload
   const [files, setFiles] = useState<File[]>([]);
   const [metadata, setMetadata] = useState<Partial<UploadDocumentDto>[]>([]);
 
-    // Hàm này được gọi bởi FileUploadStep
   const handleFilesAccepted = (acceptedFiles: File[]) => {
     setFiles(acceptedFiles);
-    // Tạo một mảng metadata rỗng tương ứng
     setMetadata(Array(acceptedFiles.length).fill({}));
-    // Tự động chuyển sang bước 2
     setStep(2);
   };
 
+  // --- HÀM ĐƯỢC CẬP NHẬT ---
   const handleDetailsSubmit = () => {
-    // TODO: Validate metadata (kiểm tra title có rỗng không, v.v.)
-    setStep(3); // Chuyển sang Bước 3 (Done)
+    // Validation: Kiểm tra tất cả các file
+    for (const meta of metadata) {
+      if (!meta.title || !meta.subject) {
+        toast.error('Vui lòng điền đầy đủ Môn học và Tiêu đề cho tất cả các file!');
+        return; // Dừng lại, không chuyển bước
+      }
+    }
+    
+    // Nếu tất cả đều OK, chuyển sang Bước 3
+    setStep(3);
   };
+  // --- KẾT THÚC CẬP NHẬT ---
 
   const renderStep = () => {
     switch (step) {
@@ -40,7 +49,7 @@ export default function UploadPage() {
           />
         );
       case 3:
-        return <UploadDoneStep files={files} metadata={metadata} />;
+        return <UploadDoneStep files={files} metadata={metadata as UploadDocumentDto[]} />; // Ép kiểu ở đây
       default:
         return <FileUploadStep onFilesAccepted={handleFilesAccepted} />;
     }
@@ -52,6 +61,7 @@ export default function UploadPage() {
         Upload your files
       </h1>
 
+      {/* Stepper (giữ nguyên) */}
       <div className="flex justify-between my-8 text-gray-500">
         <span className={step === 1 ? 'text-[#2F80ED] font-bold' : ''}>1. Upload</span>
         <span className={step === 2 ? 'text-[#2F80ED] font-bold' : ''}>2. Details</span>
