@@ -22,14 +22,15 @@ export default function FilterSidebar({
   const [majorSearch, setMajorSearch] = useState('');
   const [subjectSearch, setSubjectSearch] = useState('');
   
-  // ✅ State để quản lý ngành nào đang được expand
   const [expandedMajors, setExpandedMajors] = useState<Set<string>>(new Set());
 
   const filteredMajors = useMemo(() => {
     if (!majors) return [];
-    return majors.filter((major) =>
+    const filtered = majors.filter((major) =>
       major.name.toLowerCase().includes(majorSearch.toLowerCase())
     );
+    console.log('🔍 [FilterSidebar] Total majors:', majors.length, 'Filtered:', filtered.length);
+    return filtered;
   }, [majors, majorSearch]);
 
   const filteredSubjects = useMemo(() => {
@@ -43,13 +44,14 @@ export default function FilterSidebar({
     console.log('[FilterSidebar] selectedSubjectIds changed:', selectedSubjectIds);
   }, [selectedSubjectIds]);
 
-  // ✅ Toggle môn học đơn
   const handleSubjectToggle = (subjectId: string | undefined) => {
     if (!subjectId) return;
 
-    const newIds = selectedSubjectIds.includes(subjectId)
-      ? selectedSubjectIds.filter((id) => id !== subjectId)
-      : [...selectedSubjectIds, subjectId].sort();
+    // ✅ Safe check for undefined/null
+    const currentIds = selectedSubjectIds || [];
+    const newIds = currentIds.includes(subjectId)
+      ? currentIds.filter((id) => id !== subjectId)
+      : [...currentIds, subjectId].sort();
 
     console.log('[SubjectToggle] ->', { subjectId, newIds });
     setSelectedSubjectIds(newIds);
@@ -86,11 +88,11 @@ export default function FilterSidebar({
       </div>
 
       {/* NGÀNH HỌC (Grouped Subjects) */}
-      <div className="mt-4">
-        <h4 className="font-semibold text-gray-800 mb-2">
-          LỌC THEO NGÀNH HỌC
+      <div className="mt-4 flex flex-col min-h-0">
+        <h4 className="font-normal text-gray-800 mb-2">
+          Lọc theo ngành học
         </h4>
-        <div className="relative">
+        <div className="relative mb-2">
           <input
             type="text"
             placeholder="Tìm ngành..."
@@ -100,9 +102,20 @@ export default function FilterSidebar({
           />
           <MagnifyingGlassIcon className="w-4 h-4 text-gray-400 absolute left-2 top-1/2 -translate-y-1/2" />
         </div>
-        <div className="max-h-96 overflow-y-auto mt-2 pr-2">
+        
+        {/* ✅ FIX: Force scrollbar hiển thị với overflow-y-scroll và custom scrollbar */}
+        <div 
+          className="border border-gray-200 rounded-md p-2"
+          style={{ 
+            height: '320px',
+            overflowY: 'scroll',
+            WebkitOverflowScrolling: 'touch'
+          }}
+        >
           {isLoadingMajors ? (
             <p className="text-sm text-gray-500">Đang tải...</p>
+          ) : filteredMajors.length === 0 ? (
+            <p className="text-sm text-gray-500">Không tìm thấy ngành</p>
           ) : (
             filteredMajors.map((major) => {
               const isExpanded = expandedMajors.has(major._id);
@@ -121,7 +134,7 @@ export default function FilterSidebar({
                       ) : (
                         <ChevronRightIcon className="w-4 h-4 text-gray-600" />
                       )}
-                      <span className="font-medium text-gray-800">
+                      <span className="font-medium text-gray-800 text-sm">
                         {major.name}
                       </span>
                     </div>
@@ -136,12 +149,13 @@ export default function FilterSidebar({
                       {subjectsInMajor.map((subject) => (
                         <label
                           key={subject._id ?? subject.name}
-                          className="flex items-center py-1 cursor-pointer"
+                          className="flex items-center py-1 cursor-pointer hover:bg-gray-50 px-2 rounded"
                         >
                           <input
                             type="checkbox"
                             checked={
                               !!subject._id &&
+                              Array.isArray(selectedSubjectIds) &&
                               selectedSubjectIds.includes(subject._id)
                             }
                             onChange={() =>
@@ -155,7 +169,7 @@ export default function FilterSidebar({
                         </label>
                       ))}
                       {subjectsInMajor.length === 0 && (
-                        <p className="text-xs text-gray-400 italic">
+                        <p className="text-xs text-gray-400 italic px-2">
                           Chưa có môn học
                         </p>
                       )}
@@ -170,8 +184,8 @@ export default function FilterSidebar({
 
       {/* TÌM KIẾM TẤT CẢ MÔN HỌC */}
       <div className="mt-6 border-t pt-4">
-        <h4 className="font-semibold text-gray-800 mb-2">
-          HOẶC TÌM MÔN HỌC
+        <h4 className="font-normal text-gray-800 mb-2">
+          Lọc theo môn học
         </h4>
         <div className="relative">
           <input
@@ -183,24 +197,28 @@ export default function FilterSidebar({
           />
           <MagnifyingGlassIcon className="w-4 h-4 text-gray-400 absolute left-2 top-1/2 -translate-y-1/2" />
         </div>
-        <div className="h-48 overflow-y-auto mt-2 pr-2">
+        <div className="h-48 overflow-y-auto mt-2 pr-2 border border-gray-100 rounded-md p-2">
           {isLoadingSubjects ? (
             <p className="text-sm text-gray-500">Đang tải...</p>
+          ) : filteredSubjects.length === 0 ? (
+            <p className="text-sm text-gray-500">Không tìm thấy môn học</p>
           ) : (
             filteredSubjects.map((subject) => (
               <label
                 key={subject._id ?? subject.name}
-                className="flex items-center mt-2 cursor-pointer"
+                className="flex items-center mt-2 cursor-pointer hover:bg-gray-50 px-2 py-1 rounded"
               >
                 <input
                   type="checkbox"
                   checked={
-                    !!subject._id && selectedSubjectIds.includes(subject._id)
+                    !!subject._id && 
+                    Array.isArray(selectedSubjectIds) &&
+                    selectedSubjectIds.includes(subject._id)
                   }
                   onChange={() => subject._id && handleSubjectToggle(subject._id)}
                   className="mr-2 rounded"
                 />
-                <span className="text-gray-700">{subject.name}</span>
+                <span className="text-sm text-gray-700">{subject.name}</span>
               </label>
             ))
           )}

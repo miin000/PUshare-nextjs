@@ -1,4 +1,3 @@
-// src/hooks/useUploadsOverTime.ts
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios';
 
@@ -7,14 +6,20 @@ interface UploadsData {
   count: number;
 }
 
-const getUploadsOverTime = async (): Promise<UploadsData[]> => {
-  const response = await api.get('/statistics/uploads-over-time');
+// --- CẬP NHẬT HÀM NÀY ---
+const getUploadsOverTime = async (days: number): Promise<UploadsData[]> => {
+  const response = await api.get('/statistics/uploads-over-time', {
+    params: {
+      days: days, // Gửi ?days=...
+    },
+  });
   return response.data;
 };
 
-export const useUploadsOverTime = () => {
+export const useUploadsOverTime = (days: number) => {
   return useQuery({
-    queryKey: ['uploadsOverTime'],
-    queryFn: getUploadsOverTime,
+    queryKey: ['uploadsOverTime', days], // queryKey phải phụ thuộc vào 'days'
+    queryFn: () => getUploadsOverTime(days),
   });
 };
+// --- KẾT THÚC CẬP NHẬT ---

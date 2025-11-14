@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios';
-import { User } from '@/@types/user.type'; // Import User type
+import { User } from '@/@types/user.type';
+import { Document as DocType } from '@/@types/document.type';
 
 // --- Kiểu dữ liệu (Types) ---
 export interface Subject {
@@ -38,6 +39,27 @@ interface AdminUsersResponse {
   data: User[];
   pagination: { total: number; /* ... */ };
 }
+
+interface AdminDocumentsResponse {
+  data: DocType[];
+  pagination: { total: number; /* ... */ };
+}
+
+const getAdminDocuments = async (search: string): Promise<AdminDocumentsResponse> => {
+  const response = await api.get('/admin/documents', {
+    params: {
+      search: search,
+      limit: 100,
+    },
+  });
+  return response.data;
+};
+export const useAdminDocuments = (search: string) => {
+  return useQuery({
+    queryKey: ['adminDocuments', search],
+    queryFn: () => getAdminDocuments(search),
+  });
+};
 
 const getAdminUsers = async (search: string): Promise<AdminUsersResponse> => {
   const response = await api.get('/admin/users', {

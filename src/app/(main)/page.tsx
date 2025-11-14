@@ -1,5 +1,3 @@
-// src/app/(main)/page.tsx (Frontend)
-
 'use client';
 import { useState } from 'react';
 import { useDocuments } from '@/hooks/useDocuments';
@@ -9,11 +7,12 @@ import SortDropdown, {
   SortOption,
 } from '@/components/common/SortDropdown';
 import FilterSidebar from '@/components/layout/FilterSidebar';
-import { useDebounce } from '@/hooks/useDebounce';
+// --- IMPORT MỚI ---
+import { useSearchStore } from '@/store/search.store';
+// --- KẾT THÚC ---
 
 type ViewMode = 'grid' | 'list';
 
-// Định nghĩa các lựa chọn cho dropdown
 const sortByOptions: SortOption[] = [
   { label: 'Ngày đăng (Mới nhất)', value: 'uploadDate' },
   { label: 'Lượt tải (Nhiều nhất)', value: 'downloads' },
@@ -25,29 +24,37 @@ const sortOrderOptions: SortOption[] = [
 ];
 
 export default function HomePage() {
-  // State cho chế độ xem (Grid/List)
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
-
-  // State cho sắp xếp (Sử dụng object đầy đủ)
   const [sortBy, setSortBy] = useState<SortOption>(sortByOptions[0]);
   const [sortOrder, setSortOrder] = useState<SortOption>(sortOrderOptions[0]);
-
   const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
-  const debouncedSubjectIds = useDebounce(selectedSubjectIds, 300);
+  // --- LẤY SEARCH TỪ STORE ---
+  const search = useSearchStore((state) => state.search);
+  // --- KẾT THÚC ---
 
-  const { data, isLoading, isError } = useDocuments(sortBy.value, sortOrder.value, debouncedSubjectIds);
+  // Truyền `search` vào hook
+  const { data, isLoading, isError, isFetching } = useDocuments(
+    sortBy.value,
+    sortOrder.value,
+    selectedSubjectIds,
+    search // <-- TRUYỀN VÀO ĐÂY
+  );
 
+  // Hiển thị "Đang tải tài liệu..." CHỈ khi tải lần đầu
   if (isLoading) {
     return (
-      <div className="text-gray-800 dark:text-gray-200">Đang tải tài liệu...</div>
+      <div className="flex-1 p-6 text-gray-800">Đang tải tài liệu...</div>
     );
   }
-  if (isError) return <div className="text-red-600">Lỗi khi tải tài liệu.</div>;
+
+  // Hiển thị lỗi nếu có
+  if (isError) {
+    return <div className="flex-1 p-6 text-red-600">Lỗi khi tải tài liệu. Vui lòng thử lại.</div>;
+  }
 
   return (
-    // Đây là layout 2 cột mới (thay thế cho (main)/layout.tsx)
     <>
       <FilterSidebar
         isOpen={isSidebarOpen}
@@ -57,8 +64,12 @@ export default function HomePage() {
       />
 
       <main className="flex-1 p-6 relative bg-gray-50 transition-all duration-300">
-        {/* Nút mở sidebar khi nó đóng */}
-        {isLoading && <div className="absolute inset-0 flex items-center justify-center bg-white/60">Đang tải...</div>}
+        {isFetching && (
+          <div className="absolute top-4 right-4 text-sm text-gray-500">
+            Đang cập nhật...
+          </div>
+        )}
+        
         {!isSidebarOpen && (
           <button
             onClick={() => setIsSidebarOpen(true)}
@@ -68,12 +79,11 @@ export default function HomePage() {
           </button>
         )}
         
-        {/* Header của Main (Sắp xếp, Grid/List) */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
           <h1 className="text-2xl font-bold text-gray-900">
-            All Documents ({data?.pagination.total || 0})
+            {search ? `Kết quả cho "${search}"` : 'Tất cả Tài liệu'}
+            ({data?.pagination.total || 0})
           </h1>
-
           <div className="flex flex-wrap items-center gap-4">
             <SortDropdown
               label="Sắp xếp theo"
@@ -108,22 +118,25 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Danh sách tài liệu */}
         <div
-          className={
-            viewMode === 'grid'
-              ? 'grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'
-              : 'flex flex-col gap-4'
-          }
+          className={`transition-opacity ${isFetching ? 'opacity-50' : 'opacity-100'}`} // Làm mờ đi khi đang tải
         >
-          {data?.data.map((doc) => (
-            <DocumentCard key={doc._id} doc={doc} viewMode={viewMode} />
-          ))}
-          {data?.data.length === 0 && (
-            <p className="text-gray-500 col-span-full">
-              Không tìm thấy tài liệu nào khớp với bộ lọc.
-            </p>
-          )}
+          <div
+            className={
+              viewMode === 'grid'
+                ? 'grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'
+                : 'flex flex-col gap-4'
+            }
+          >
+            {data?.data.map((doc) => (
+              <DocumentCard key={doc._id} doc={doc} viewMode={viewMode} />
+            ))}
+            {data?.data.length === 0 && (
+              <p className="text-gray-500 col-span-full">
+                Không tìm thấy tài liệu nào khớp với bộ lọc.
+              </p>
+            )}
+          </div>
         </div>
       </main>
     </>

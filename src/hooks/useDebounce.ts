@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 
 // Hook này nhận một giá trị (value) và thời gian trễ (delay)
-export function useDebounce(value: string, delay: number) {
+export function useDebounce<T>(value: T, delay: number): T {
   // State để lưu giá trị đã trễ
   const [debouncedValue, setDebouncedValue] = useState(value);
 

@@ -12,6 +12,7 @@ import {
 import { Fragment } from 'react';
 import api from '@/lib/axios';
 import { toast } from 'react-hot-toast';
+import Link from 'next/link';
 
 interface DocumentCardProps {
   doc: Document;
@@ -134,7 +135,6 @@ const GridLayout = ({ doc, onPreview, onShare, onDownload, onReport }: LayoutPro
     <p className="h-10 mt-1 text-sm text-gray-600 overflow-hidden text-ellipsis">{doc.description}</p>
     <div className="flex gap-2 mt-3">
       <span className="px-2 py-1 text-xs text-blue-700 bg-blue-100 rounded-full">
-        {/* Code này đã đúng, nó sẽ hoạt động sau khi bạn sửa file type */}
         {doc.subject?.name || 'General'}
       </span>
       <span className="px-2 py-1 text-xs text-gray-700 bg-gray-100 rounded-full">
@@ -143,10 +143,15 @@ const GridLayout = ({ doc, onPreview, onShare, onDownload, onReport }: LayoutPro
     </div>
     <div className="flex items-center justify-between mt-4">
       <div className="flex items-center text-sm text-gray-500">
+      <Link
+        href={`/profile/${doc.uploader._id}`} // <-- LINK MỚI
+        className="flex items-center text-sm text-gray-500 hover:text-blue-600 group"
+      >
         <span className="flex items-center justify-center w-6 h-6 mr-2 text-xs font-semibold bg-green-200 rounded-full text-green-700">
           {doc.uploader.fullName.substring(0, 2).toUpperCase()}
         </span>
         <span>{doc.uploader.fullName}</span>
+      </Link>
       </div>
       <span className="flex items-center text-sm font-medium text-gray-600">
         <ArrowDownTrayIcon className="inline w-4 h-4 mr-1" />
@@ -165,8 +170,11 @@ const ListLayout = ({ doc, onPreview, onShare, onDownload, onReport }: LayoutPro
       <h3 className="text-lg font-semibold text-gray-900">{doc.title}</h3>
       <p className="text-sm text-gray-600">{doc.description}</p>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 text-sm text-gray-500">
+        <Link
+        href={`/profile/${doc.uploader._id}`} // <-- LINK MỚI
+        className="flex items-center hover:text-blue-600 group"
+      >
         <span className="px-2 py-1 text-xs text-blue-700 bg-blue-100 rounded-full">
-          {/* Code này đã đúng, nó sẽ hoạt động sau khi bạn sửa file type */}
           {doc.subject?.name || 'General'}
         </span>
         <span className="px-2 py-1 text-xs text-gray-700 bg-gray-100 rounded-full">
@@ -178,6 +186,7 @@ const ListLayout = ({ doc, onPreview, onShare, onDownload, onReport }: LayoutPro
           </span>
           {doc.uploader.fullName}
         </span>
+        </Link>
         <span>{new Date(doc.uploadDate).toLocaleDateString()}</span>
         <span>{formatDownloads(doc.downloadCount)} DLs</span>
         <span>{formatFileType(doc.fileType)}</span>
